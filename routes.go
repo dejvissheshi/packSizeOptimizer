@@ -124,7 +124,7 @@ func RemovePackages(w http.ResponseWriter, r *http.Request) {
 // CalculatePackages is a handler for the Calculate endpoint
 func CalculatePackages(w http.ResponseWriter, r *http.Request) {
 	// Extract the "id" parameter from the URL
-	id := strings.TrimPrefix(r.URL.Path, "/Calculate/")
+	id := strings.TrimPrefix(r.URL.Path, "/calculate/")
 	id = strings.TrimSuffix(id, "/")
 
 	itemsOrdered, err := strconv.Atoi(id)
