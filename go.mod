@@ -1,3 +1,3 @@
-module awesomeProject2
+module packSizeOptimizer
 
 go 1.20
