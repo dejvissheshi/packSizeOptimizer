@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"os"
 )
 
 func main() {
@@ -17,7 +16,7 @@ func main() {
 	http.HandleFunc("/add/", AddNewPackages)
 	http.HandleFunc("/remove/", RemovePackages)
 
-	port := os.Getenv("PORT")
+	port := 8080
 	fmt.Printf("Server is running on port %d...\n", port)
 	err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
 	if err != nil {
