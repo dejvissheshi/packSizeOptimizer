@@ -6,8 +6,8 @@
 <body>
 <ul>
   {{range .Packages}}
-  <li>{{.PackageSize}}</li>
-  <li>{{.Quantity}}</li>
+    <li><p>Package size</p> {{.PackageSize}}</li>
+    <li><p>Quantity</p> {{.Quantity}}</li>
   {{end}}
 </ul>
 </body>
