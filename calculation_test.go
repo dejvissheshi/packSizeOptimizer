@@ -23,8 +23,8 @@ func (p ByPackageSize) Less(i, j int) bool {
 	return p.Packages[i].PackageSize > p.Packages[j].PackageSize
 }
 
-func Test_calculate_defaultPackageSize(t *testing.T) {
-	items1 := []int{250, 500, 1000, 2000, 5000}
+func Test_calculate_defaultPackageSize_InitialAlgorithm(t *testing.T) {
+	packetSizes := []int{250, 500, 1000, 2000, 5000}
 
 	testCases := []struct {
 		name         string
@@ -143,9 +143,10 @@ func Test_calculate_defaultPackageSize(t *testing.T) {
 		},
 	}
 
+	calculator := SingletonCalculator{}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := Calculate(tc.itemsOrdered, items1)
+			got := calculator.GetInstance().Calculate(packetSizes, tc.itemsOrdered)
 			sort.Sort(ByPackageSize{got})
 			if len(got) != len(tc.want) {
 				t.Errorf("Calculate() = %v, want %v", got, tc.want)
@@ -163,55 +164,8 @@ func Test_calculate_defaultPackageSize(t *testing.T) {
 	}
 }
 
-func Test_calculate_customPackages(t *testing.T) {
-	items2 := []int{23, 31, 53}
-	testCases := []struct {
-		name         string
-		itemsOrdered int
-		want         []PackageInfo
-	}{
-		{
-			name:         "test1",
-			itemsOrdered: 263,
-			want: []PackageInfo{
-				{
-					PackageSize: 53,
-					Quantity:    4,
-				},
-				{
-					PackageSize: 31,
-					Quantity:    1,
-				},
-				{
-					PackageSize: 23,
-					Quantity:    1,
-				},
-			},
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			got := Calculate(tc.itemsOrdered, items2)
-			sort.Sort(ByPackageSize{got})
-			if len(got) != len(tc.want) {
-				t.Errorf("Calculate() = %v, want %v", got, tc.want)
-			}
-			for i := range got {
-				if got[i].PackageSize != tc.want[i].PackageSize {
-					t.Errorf("Calculate() = %v, want %v", got, tc.want)
-				}
-				if got[i].Quantity != tc.want[i].Quantity {
-					t.Errorf("Calculate() = %v, want %v", got, tc.want)
-				}
-			}
-
-		})
-	}
-}
-
-func Test_calculate_customPackages1(t *testing.T) {
-	items1 := []int{250, 500, 1000}
+func Test_calculate_customPackages1_InitialAlgorithm(t *testing.T) {
+	packetsSizes := []int{250, 500, 1000}
 
 	testCases := []struct {
 		name         string
@@ -230,9 +184,10 @@ func Test_calculate_customPackages1(t *testing.T) {
 		},
 	}
 
+	calculator := SingletonCalculator{}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := Calculate(tc.itemsOrdered, items1)
+			got := calculator.GetInstance().Calculate(packetsSizes, tc.itemsOrdered)
 			sort.Sort(ByPackageSize{got})
 			if len(got) != len(tc.want) {
 				t.Errorf("Calculate() = %v, want %v", got, tc.want)
@@ -250,7 +205,7 @@ func Test_calculate_customPackages1(t *testing.T) {
 	}
 }
 
-func Test_calculate_customPackages2(t *testing.T) {
+func Test_calculate_customPackages2_InitialAlgorithm(t *testing.T) {
 	itemsPackage := []int{490, 500, 1000, 2000, 5000}
 
 	testCases := []struct {
@@ -270,9 +225,121 @@ func Test_calculate_customPackages2(t *testing.T) {
 		},
 	}
 
+	calculator := SingletonCalculator{}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := Calculate(tc.itemsOrdered, itemsPackage)
+			got := calculator.GetInstance().Calculate(itemsPackage, tc.itemsOrdered)
+			sort.Sort(ByPackageSize{got})
+			if len(got) != len(tc.want) {
+				t.Errorf("Calculate() = %v, want %v", got, tc.want)
+			}
+			for i := range got {
+				if got[i].PackageSize != tc.want[i].PackageSize {
+					t.Errorf("Calculate() = %v, want %v", got, tc.want)
+				}
+				if got[i].Quantity != tc.want[i].Quantity {
+					t.Errorf("Calculate() = %v, want %v", got, tc.want)
+				}
+			}
+
+		})
+	}
+}
+
+// Test_calculate_customPackages_OptimizedAlgorithmPass tests the optimized algorithm for the use case where Initial algorithm fails
+func Test_calculate_customPackages_OptimizedAlgorithmPass(t *testing.T) {
+	packetsSizes := []int{23, 31, 53}
+	testCases := []struct {
+		name         string
+		itemsOrdered int
+		want         []PackageInfo
+	}{
+		{
+			name:         "test1",
+			itemsOrdered: 263,
+			want: []PackageInfo{
+				{
+					PackageSize: 31,
+					Quantity:    7,
+				},
+				{
+					PackageSize: 23,
+					Quantity:    2,
+				},
+			},
+		},
+	}
+
+	calculator := SingletonCalculator{}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := calculator.GetInstance().Calculate(packetsSizes, tc.itemsOrdered)
+			sort.Sort(ByPackageSize{got})
+			if len(got) != len(tc.want) {
+				t.Errorf("Calculate() = %v, want %v", got, tc.want)
+			}
+			for i := range got {
+				if got[i].PackageSize != tc.want[i].PackageSize {
+					t.Errorf("Calculate() = %v, want %v", got, tc.want)
+				}
+				if got[i].Quantity != tc.want[i].Quantity {
+					t.Errorf("Calculate() = %v, want %v", got, tc.want)
+				}
+			}
+
+		})
+	}
+}
+
+// Test_calculate_customPackages_OptimizedAlgorithmPass tests the optimized algorithm for the use case where
+// Initial algorithm fails and optimized algorithm takes to long to process
+func Test_calculate_customPackages_AdvancedAlgorithmPass(t *testing.T) {
+	packetsSizes := []int{23, 31, 53}
+	testCases := []struct {
+		name         string
+		itemsOrdered int
+		want         []PackageInfo
+	}{
+		{
+			name:         "test1",
+			itemsOrdered: 263,
+			want: []PackageInfo{
+				{
+					PackageSize: 31,
+					Quantity:    7,
+				},
+				{
+					PackageSize: 23,
+					Quantity:    2,
+				},
+			},
+		},
+		{
+			name:         "test2",
+			itemsOrdered: 500000,
+			want: []PackageInfo{
+				{
+					PackageSize: 53,
+					Quantity:    9429,
+				},
+				{
+					PackageSize: 31,
+					Quantity:    7,
+				},
+				{
+					PackageSize: 23,
+					Quantity:    2,
+				},
+			},
+		},
+	}
+
+	calculator := SingletonCalculator{}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := calculator.GetInstance().Calculate(packetsSizes, tc.itemsOrdered)
 			sort.Sort(ByPackageSize{got})
 			if len(got) != len(tc.want) {
 				t.Errorf("Calculate() = %v, want %v", got, tc.want)
