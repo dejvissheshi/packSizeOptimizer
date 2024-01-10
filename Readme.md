@@ -7,11 +7,19 @@ the calculation of the packages and customization of delivery packages.
 
 How to run the application locally:
 
-1. Install the repository locally through git install command.
-2. It is mandatory to have go locally.
-3. To run the application go to the root directory and run:
-   1. go build packSizeOptimizer
-   2. go run packSizeOptimizer
+
+Run the docker comands to build and run the application locally.
+1. docker build -t packsizeoptimizer .
+2. docker run -p 8080:8080 packsizeoptimizer
+
+The application will be running on localhost:8080
+
+Attached to the Dockerfile is also a docker-compose file to run the application locally. 
+In order to run the application using docker-compose, run the following command:
+1. docker-compose up -> This will build and run the application together with the database. In the docker-compose file,
+ the database is exposed on port 3306, so make sure that the port is not used by any other application. Also the application
+ image is mounted to the volume of the container, so any changes made to the application will be reflected in the container.
+   (For simplicity purpose, the deployed application is using a file storage instead of a database.)
 
 API Documentation:
 
