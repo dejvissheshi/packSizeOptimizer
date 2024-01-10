@@ -19,13 +19,15 @@ API Documentation:
 
 /add/:package -> GET method to add a new package.
 /remove/:package -> GET method to remove a package.
+/read -> GET method to read the packages.
 /rollback -> GET method to rollback the changes made to the packages to default values.
 
-Base Url to access the API: https://quiet-anchorage-41647-601b859a018b.herokuapp.com/
+Added functionality to serve a static html page to test the calculate API.
 
-FYI - The application is deployed on Heroku. 
-The application is deployed on a free dyno, so it might take some time to load the application.
-The application deployed on Heroku is based on another repository where server is using gin-gonic framework.
-This was necessary to deploy the application on Heroku since gin was a requirement for the deployment.
+/visual/calculator -> GET method to serve the static html page and calculate the packages.
+Receives an array of packageSizes and itemsOrdered.
 
-Reference link of repository deployed on Heroku: https://github.com/dejvissheshi/go-getting-started
+Base Url to access the API: https://packsizeoptimizer-weathered-river-9585.fly.dev/
+
+FYI - The application is deployed on Fly using containerised approach . 
+The application is deployed on a free tier, so it might take some time to load the application.
