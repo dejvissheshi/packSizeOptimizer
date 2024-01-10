@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Initial Packages</title>
+</head>
+<body>
+<ul>
+  {{range .Packages}}
+  <li>{{.PackageSize}}</li>
+  <li>{{.Quantity}}</li>
+  {{end}}
+</ul>
+</body>
+<button onclick="window.location.href='/visual/calculate'">Calculate Again</button>
+</html>
