@@ -1,20 +1,37 @@
-package db
+package mysql
 
-import "database/sql"
+import (
+	"database/sql"
+	_ "github.com/go-sql-driver/mysql"
+)
 
 // MySQLPersister represents the MySQL implementation of the Persister interface
 type MySQLPersister struct {
 	db *sql.DB
 }
 
+// Migrate creates the packages table and inserts the default package sizes
+// TODO: As best practice migrations should be handled by a separate tool that upgrades the DB schema
+// up to the latest version. For the sake of simplicity we will handle migrations here.
+func (mp *MySQLPersister) Migrate() error {
+	// Create the packages table
+	_, err := mp.db.Exec("CREATE TABLE packages (packageSize int NOT NULL)")
+	if err != nil {
+		return err
+	}
+	_, err = mp.db.Exec("INSERT INTO packages (packageSize) VALUES (250, 500, 1000, 2000, 5000)")
+	return err
+}
+
+// Init opens a connection to the database
 func (mp *MySQLPersister) Init() error {
 	var err error
 	mp.db, err = sql.Open("mysql", "user:password@tcp(localhost:3306)/dbname")
 	return err
 }
 
-// Insert inserts a new packageSize into the database
-func (mp *MySQLPersister) Insert(data int) (int, error) {
+// Add inserts a new packageSize into the database
+func (mp *MySQLPersister) Add(data int) (int, error) {
 	// Insert a new user into the database
 	insertPackageQuery := "INSERT INTO packages (packageSize) VALUES (?)"
 	result, err := mp.db.Exec(insertPackageQuery, data)
@@ -51,6 +68,7 @@ func (mp *MySQLPersister) Read() ([]int, error) {
 	return packageSizes, nil
 }
 
+// Remove removes a packageSize from the database
 func (mp *MySQLPersister) Remove(data int) error {
 	// Remove the package from the database
 	removePackageQuery := "DELETE FROM packages WHERE packageSize = ?"
@@ -58,6 +76,7 @@ func (mp *MySQLPersister) Remove(data int) error {
 	return err
 }
 
+// Close closes the connection to the database
 func (mp *MySQLPersister) Close() error {
 	return mp.db.Close()
 }
