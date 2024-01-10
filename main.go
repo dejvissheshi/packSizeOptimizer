@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 
 	"github.com/gorilla/mux"
@@ -67,12 +68,16 @@ func main() {
 	myRouter.HandleFunc("/read", packageInterface.ReadPackages)
 	myRouter.HandleFunc("/form/calculate", CalculateData).Methods("POST")
 
+	myRouter.HandleFunc("/", Index)
 	myRouter.HandleFunc("/visual/calculate/", CalculateTemplate)
 	myRouter.HandleFunc("/submit", SubmitHandler)
 
-	port := 8080
-	fmt.Printf("Server is running on port %d...\n", port)
-	err := http.ListenAndServe(fmt.Sprintf(":%d", port), myRouter)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	fmt.Printf("Server is running on port %s...\n", port)
+	err := http.ListenAndServe(fmt.Sprintf(":%s", port), myRouter)
 	if err != nil {
 		fmt.Println("Error:", err)
 	}
