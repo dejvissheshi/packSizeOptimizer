@@ -1,5 +1,0 @@
-CREATE TABLE `packages` (
-  `packageSize` int(11) NOT NULL AUTO_INCREMENT,
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-INSERT INTO `packages` (`packageSize`) VALUES (250, 500, 1000, 2000, 5000);

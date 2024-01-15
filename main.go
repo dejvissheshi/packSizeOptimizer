@@ -2,70 +2,20 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"github.com/gorilla/mux"
 	"net/http"
 	"os"
-	"sync"
-
-	"github.com/gorilla/mux"
-
-	"packSizeOptimizer/db/mysql"
 )
 
-// Calculator defines the interface for a calculator.
-type Calculator interface {
-	Calculate(a []int, b int) []PackageInfo
-}
-
-// SingletonCalculator is a singleton that holds an instance of a calculator.
-type SingletonCalculator struct {
-	calculator Calculator
-	once       sync.Once
-}
-
-// GetInstance returns the singleton instance of the calculator.
-func (s *SingletonCalculator) GetInstance() Calculator {
-	s.once.Do(func() {
-		// You can choose between InitialCalculator, OptimizedCalculator and AdvancedCalculator here
-		s.calculator = &AdvancedCalculator{}
-	})
-	return s.calculator
-}
-
 func main() {
-	//
-	//	// TODO: for better configuration, we could use a config structure
-	//	// that reads from the environment variables the DB connection configuration.
-	//	// For the sake of simplicity, we will hardcode configuration of db in the main code.
-	//	//Initialise DB
-	dbPersister := &mysql.MySQLPersister{}
-
-	packageRepository := dbPersister
-	packageInterface := &HttpHandler{
-		Repository: packageRepository,
-		UseFile:    false,
-	}
-
-	if packageInterface.UseFile {
-		err := dbPersister.Init()
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer dbPersister.Close()
-
-		err = dbPersister.Migrate()
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
 
 	// Endpoints
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/calculate/", CalculatePackages)
-	myRouter.HandleFunc("/rollback", packageInterface.RollbackPackageChanges)
-	myRouter.HandleFunc("/add/", packageInterface.AddNewPackages)
-	myRouter.HandleFunc("/remove/", packageInterface.RemovePackages)
-	myRouter.HandleFunc("/read", packageInterface.ReadPackages)
+	myRouter.HandleFunc("/rollback", RollbackPackageChanges)
+	myRouter.HandleFunc("/add/", AddNewPackages)
+	myRouter.HandleFunc("/remove/", RemovePackages)
+	myRouter.HandleFunc("/read", ReadPackages)
 	myRouter.HandleFunc("/form/calculate", CalculateData).Methods("POST")
 
 	myRouter.HandleFunc("/", Index)

@@ -11,32 +11,13 @@ import (
 	"strconv"
 	"strings"
 
-	"packSizeOptimizer/db"
 	"packSizeOptimizer/file"
 )
 
 var defaultItems = []int{250, 500, 1000, 2000, 5000}
 
-// PackageInterface is a custom interface for HTTP handlers.
-type PackageInterface interface {
-	RollbackPackageChanges(w http.ResponseWriter, r *http.Request)
-	AddNewPackages(w http.ResponseWriter, r *http.Request)
-	RemovePackages(w http.ResponseWriter, r *http.Request)
-}
-
-// HttpHandler is a type that implements MyHandlerInterface.
-type HttpHandler struct {
-	Repository db.PackagesRepository
-	UseFile    bool
-}
-
-// testHandler is a simple handler for the test endpoint
-func testHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello, this is the test endpoint!")
-}
-
 // RollbackPackageChanges is a handler for the rollback endpoint
-func (h HttpHandler) RollbackPackageChanges(w http.ResponseWriter, r *http.Request) {
+func RollbackPackageChanges(w http.ResponseWriter, r *http.Request) {
 	err := file.RollbackFileToInitialState("data.csv", defaultItems)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -64,7 +45,7 @@ func (h HttpHandler) RollbackPackageChanges(w http.ResponseWriter, r *http.Reque
 }
 
 // AddNewPackages is a handler for the add endpoint
-func (h HttpHandler) AddNewPackages(w http.ResponseWriter, r *http.Request) {
+func AddNewPackages(w http.ResponseWriter, r *http.Request) {
 	// Extract the "id" parameter from the URL
 	id := strings.TrimPrefix(r.URL.Path, "/add/")
 	id = strings.TrimSuffix(id, "/")
@@ -102,7 +83,7 @@ func (h HttpHandler) AddNewPackages(w http.ResponseWriter, r *http.Request) {
 }
 
 // RemovePackages is a handler for the delete endpoint
-func (h HttpHandler) RemovePackages(w http.ResponseWriter, r *http.Request) {
+func RemovePackages(w http.ResponseWriter, r *http.Request) {
 	// Extract the "id" parameter from the URL
 	id := strings.TrimPrefix(r.URL.Path, "/remove/")
 	id = strings.TrimSuffix(id, "/")
@@ -140,7 +121,7 @@ func (h HttpHandler) RemovePackages(w http.ResponseWriter, r *http.Request) {
 }
 
 // ReadPackages is a handler for the read endpoint
-func (h HttpHandler) ReadPackages(w http.ResponseWriter, r *http.Request) {
+func ReadPackages(w http.ResponseWriter, r *http.Request) {
 	numbers, err := file.ReadNumbersFromCSV("data.csv")
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -174,8 +155,7 @@ func CalculatePackages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	calculator := SingletonCalculator{}
-	packages := calculator.GetInstance().Calculate(defaultItems, itemsOrdered)
+	packages := Calculate(defaultItems, itemsOrdered)
 	// Create a response JSON
 	response := packages
 
@@ -210,8 +190,7 @@ func CalculateData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	calculator := SingletonCalculator{}
-	result := calculator.GetInstance().Calculate(requestData.PackSizes, requestData.Items)
+	result := Calculate(requestData.PackSizes, requestData.Items)
 	responseJSON, err := json.Marshal(result)
 	if err != nil {
 		http.Error(w, "Error creating response JSON", http.StatusInternalServerError)
