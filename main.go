@@ -11,10 +11,10 @@ func main() {
 
 	// Endpoints
 	myRouter := mux.NewRouter().StrictSlash(true)
-	myRouter.HandleFunc("/calculate/", CalculatePackages)
+	myRouter.HandleFunc("/calculate/{id}", CalculatePackages)
 	myRouter.HandleFunc("/rollback", RollbackPackageChanges)
-	myRouter.HandleFunc("/add/", AddNewPackages)
-	myRouter.HandleFunc("/remove/", RemovePackages)
+	myRouter.HandleFunc("/add/{id}", AddNewPackages)
+	myRouter.HandleFunc("/remove/{id}", RemovePackages)
 	myRouter.HandleFunc("/read", ReadPackages)
 	myRouter.HandleFunc("/form/calculate", CalculateData).Methods("POST")
 
@@ -26,6 +26,7 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
+
 	fmt.Printf("Server is running on port %s...\n", port)
 	err := http.ListenAndServe(fmt.Sprintf(":%s", port), myRouter)
 	if err != nil {
