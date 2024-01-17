@@ -23,16 +23,16 @@ In order to run the application using docker-compose, run the following command:
 
 API Documentation:
 
-/calculate/:itemsOrdered -> GET method to calculate the packages for the given number of orders.
+ - /calculate/:itemsOrdered -> GET method to calculate the packages for the given number of orders.
 
-/add/:package -> GET method to add a new package.
-/remove/:package -> GET method to remove a package.
-/read -> GET method to read the packages.
-/rollback -> GET method to rollback the changes made to the packages to default values.
+ - /add/:package -> GET method to add a new package.
+ - /remove/:package -> GET method to remove a package.
+ - /read -> GET method to read the packages.
+ - /rollback -> GET method to rollback the changes made to the packages to default values.
 
 Added functionality to serve a static html page to test the calculate API.
 
-/visual/calculator -> GET method to serve the static html page and calculate the packages.
+ - /visual/calculator -> GET method to serve the static html page and calculate the packages.
 Receives an array of packageSizes and itemsOrdered.
 
 Base Url to access the API: https://packsizeoptimizer-weathered-river-9585.fly.dev/
