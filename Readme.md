@@ -11,7 +11,7 @@ Run the docker comands to build and run the application locally.
 1. docker build -t packsizeoptimizer .
 2. docker run -p 8080:8080 packsizeoptimizer
 
-The application will be running on localhost:8080
+The application will be running on http://localhost:8080
 
 The repository is organised following simple screaming architecture approach, 
 which makes it straightforward and easy to read. 
