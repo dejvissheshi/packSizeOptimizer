@@ -2,30 +2,29 @@ package main
 
 import (
 	"fmt"
-	"github.com/gorilla/mux"
 	"net/http"
 	"os"
+	"packSizeOptimizer/file"
+
+	"packSizeOptimizer/routers"
 )
 
 func main() {
 
-	// Endpoints
-	myRouter := mux.NewRouter().StrictSlash(true)
-	myRouter.HandleFunc("/calculate/", CalculatePackages)
-	myRouter.HandleFunc("/rollback", RollbackPackageChanges)
-	myRouter.HandleFunc("/add/", AddNewPackages)
-	myRouter.HandleFunc("/remove/", RemovePackages)
-	myRouter.HandleFunc("/read", ReadPackages)
-	myRouter.HandleFunc("/form/calculate", CalculateData).Methods("POST")
+	packService := file.PackFiles{
+		Filename: "data.csv",
+	}
 
-	myRouter.HandleFunc("/", Index)
-	myRouter.HandleFunc("/visual/calculate/", CalculateTemplate)
-	myRouter.HandleFunc("/submit", SubmitHandler)
+	httpHandler := routers.HttpHandler{
+		PackService: packService,
+	}
+	myRouter := routers.NewRouter(httpHandler)
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
+
 	fmt.Printf("Server is running on port %s...\n", port)
 	err := http.ListenAndServe(fmt.Sprintf(":%s", port), myRouter)
 	if err != nil {
