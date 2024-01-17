@@ -1,30 +1,55 @@
-package main
+package routers
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/mux"
 	"html/template"
 	"io/ioutil"
 	"net/http"
-	"packSizeOptimizer/utils"
+	"packSizeOptimizer/helpers"
+	"packSizeOptimizer/service"
 	"strconv"
 	"strings"
 
-	"packSizeOptimizer/file"
+	"packSizeOptimizer/utils"
 )
 
 var defaultItems = []int{250, 500, 1000, 2000, 5000}
 
+func NewRouter(httpHandler HttpHandler) *mux.Router {
+
+	myRouter := mux.NewRouter().StrictSlash(true)
+	myRouter.HandleFunc("/rollback", httpHandler.RollbackPackageChanges)
+	myRouter.HandleFunc("/add/{packages}", httpHandler.AddNewPackages)
+	myRouter.HandleFunc("/remove/{packages}", httpHandler.RemovePackages)
+	myRouter.HandleFunc("/read", httpHandler.ReadPackages)
+
+	myRouter.HandleFunc("/calculate/{items}", httpHandler.CalculatePackages)
+	myRouter.HandleFunc("/form/calculate", CalculateData).Methods("POST")
+
+	myRouter.HandleFunc("/", Index)
+	myRouter.HandleFunc("/visual/calculate/", CalculateTemplate)
+	myRouter.HandleFunc("/submit", SubmitHandler)
+
+	return myRouter
+}
+
+// HttpHandler is the builder for the handler functions
+type HttpHandler struct {
+	PackService service.PackService
+}
+
 // RollbackPackageChanges is a handler for the rollback endpoint
-func RollbackPackageChanges(w http.ResponseWriter, r *http.Request) {
-	err := file.RollbackFileToInitialState("data.csv", defaultItems)
+func (h HttpHandler) RollbackPackageChanges(w http.ResponseWriter, r *http.Request) {
+	err := h.PackService.Rollback(defaultItems)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
-	numbers, err := file.ReadNumbersFromCSV("data.csv")
+	numbers, err := h.PackService.Read()
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -45,24 +70,24 @@ func RollbackPackageChanges(w http.ResponseWriter, r *http.Request) {
 }
 
 // AddNewPackages is a handler for the add endpoint
-func AddNewPackages(w http.ResponseWriter, r *http.Request) {
-	// Extract the "id" parameter from the URL
-	id := strings.TrimPrefix(r.URL.Path, "/add/")
-	id = strings.TrimSuffix(id, "/")
+func (h HttpHandler) AddNewPackages(w http.ResponseWriter, r *http.Request) {
+	// Extract the "packages" parameter from the URL
+	packages := strings.TrimPrefix(r.URL.Path, "/add/")
+	packages = strings.TrimSuffix(packages, "/")
 
-	newPackageSize, err := strconv.Atoi(id)
+	newPackageSize, err := strconv.Atoi(packages)
 	if err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
 
-	err = file.AddNumbersToCSV("data.csv", []int{newPackageSize})
+	err = h.PackService.Add([]int{newPackageSize})
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
-	numbers, err := file.ReadNumbersFromCSV("data.csv")
+	numbers, err := h.PackService.Read()
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -83,24 +108,24 @@ func AddNewPackages(w http.ResponseWriter, r *http.Request) {
 }
 
 // RemovePackages is a handler for the delete endpoint
-func RemovePackages(w http.ResponseWriter, r *http.Request) {
-	// Extract the "id" parameter from the URL
-	id := strings.TrimPrefix(r.URL.Path, "/remove/")
-	id = strings.TrimSuffix(id, "/")
+func (h HttpHandler) RemovePackages(w http.ResponseWriter, r *http.Request) {
+	// Extract the "items" parameter from the URL
+	packages := strings.TrimPrefix(r.URL.Path, "/remove/")
+	packages = strings.TrimSuffix(packages, "/")
 
-	newPackageSize, err := strconv.Atoi(id)
+	newPackageSize, err := strconv.Atoi(packages)
 	if err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
 
-	err = file.DeleteNumbersFromCSV("data.csv", []int{newPackageSize})
+	err = h.PackService.Delete([]int{newPackageSize})
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
-	numbers, err := file.ReadNumbersFromCSV("data.csv")
+	numbers, err := h.PackService.Read()
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -121,8 +146,8 @@ func RemovePackages(w http.ResponseWriter, r *http.Request) {
 }
 
 // ReadPackages is a handler for the read endpoint
-func ReadPackages(w http.ResponseWriter, r *http.Request) {
-	numbers, err := file.ReadNumbersFromCSV("data.csv")
+func (h HttpHandler) ReadPackages(w http.ResponseWriter, r *http.Request) {
+	numbers, err := h.PackService.Read()
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -144,18 +169,25 @@ func ReadPackages(w http.ResponseWriter, r *http.Request) {
 }
 
 // CalculatePackages is a handler for the Calculate endpoint
-func CalculatePackages(w http.ResponseWriter, r *http.Request) {
-	// Extract the "id" parameter from the URL
-	id := strings.TrimPrefix(r.URL.Path, "/calculate/")
-	id = strings.TrimSuffix(id, "/")
+func (h HttpHandler) CalculatePackages(w http.ResponseWriter, r *http.Request) {
+	// Extract the "items" parameter from the URL
+	items := strings.TrimPrefix(r.URL.Path, "/calculate/")
+	items = strings.TrimSuffix(items, "/")
 
-	itemsOrdered, err := strconv.Atoi(id)
+	itemsOrdered, err := strconv.Atoi(items)
 	if err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
 
-	packages := Calculate(defaultItems, itemsOrdered)
+	// Read packages
+	packageSizes, err := h.PackService.Read()
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	packages := helpers.Calculate(packageSizes, itemsOrdered)
 	// Create a response JSON
 	response := packages
 
@@ -190,7 +222,7 @@ func CalculateData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result := Calculate(requestData.PackSizes, requestData.Items)
+	result := helpers.Calculate(requestData.PackSizes, requestData.Items)
 	responseJSON, err := json.Marshal(result)
 	if err != nil {
 		http.Error(w, "Error creating response JSON", http.StatusInternalServerError)
@@ -204,6 +236,8 @@ func CalculateData(w http.ResponseWriter, r *http.Request) {
 	w.Write(responseJSON)
 }
 
+// CalculateTemplate is a handler for the visual Calculate endpoint.
+// It takes packetSizes and items as input and returns
 func CalculateTemplate(w http.ResponseWriter, r *http.Request) {
 	// Parse the HTML template
 	tmpl, err := template.ParseFiles("templates/calculate_form.html")
@@ -221,11 +255,13 @@ func CalculateTemplate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// SubmitRequest is the request body for the submit endpoint
 type SubmitRequest struct {
 	PackSizes []int `json:"packSizes"`
 	Items     int   `json:"items"`
 }
 
+// SubmitHandler is a handler for the submit endpoint
 func SubmitHandler(w http.ResponseWriter, r *http.Request) {
 	packs := r.FormValue("packSizes")
 	packs = strings.ReplaceAll(packs, " ", "")
@@ -272,9 +308,8 @@ func SubmitHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Error reading response body:", err)
 		return
 	}
-	fmt.Println("Submitted body: ", string(body))
 
-	var packagesInfo []PackageInfo
+	var packagesInfo []helpers.PackageInfo
 	err = json.Unmarshal(body, &packagesInfo)
 	if err != nil {
 		fmt.Println("Error unmarshaling JSON:", err)
@@ -282,7 +317,7 @@ func SubmitHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := struct {
-		Packages []PackageInfo
+		Packages []helpers.PackageInfo
 	}{
 		Packages: packagesInfo,
 	}
@@ -302,6 +337,7 @@ func SubmitHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Index is a handler that renders the index page
 func Index(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.ParseFiles("templates/index.html")
 	if err != nil {

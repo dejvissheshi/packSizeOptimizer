@@ -3,13 +3,19 @@ package file
 import (
 	"encoding/csv"
 	"os"
+	"sort"
 	"strconv"
 )
 
-// ReadNumbersFromCSV Function to read numbers from a CSV file and return an array of integers
-func ReadNumbersFromCSV(filename string) ([]int, error) {
+// PackFiles is the structure that holds the necessary configuration to work with CSV files
+type PackFiles struct {
+	Filename string
+}
+
+// Read Function to read numbers from a CSV file and return an array of integers
+func (p PackFiles) Read() ([]int, error) {
 	// Open the CSV file
-	file, err := os.Open(filename)
+	file, err := os.Open(p.Filename)
 	if err != nil {
 		return nil, err
 	}
@@ -37,13 +43,14 @@ func ReadNumbersFromCSV(filename string) ([]int, error) {
 		}
 	}
 
+	sort.Ints(numbers)
 	return numbers, nil
 }
 
-// AddNumbersToCSV Function to add numbers to a CSV file removing duplicates
-func AddNumbersToCSV(filename string, newData []int) error {
+// Add Function to add numbers to a CSV file removing duplicates
+func (p PackFiles) Add(newData []int) error {
 
-	existingData, err := ReadNumbersFromCSV(filename)
+	existingData, err := p.Read()
 	if err != nil {
 		return err
 	}
@@ -65,7 +72,7 @@ func AddNumbersToCSV(filename string, newData []int) error {
 	}
 
 	// Open the CSV file
-	file, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
+	file, err := os.OpenFile(p.Filename, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
 	if err != nil {
 		return err
 	}
@@ -91,10 +98,10 @@ func AddNumbersToCSV(filename string, newData []int) error {
 	return nil
 }
 
-// RollbackFileToInitialState Function to rollback a test file to its initial state
-func RollbackFileToInitialState(filename string, initialStateValues []int) error {
+// Rollback Function to roll back a test file to its initial state
+func (p PackFiles) Rollback(initialStateValues []int) error {
 	// Open the CSV file
-	file, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
+	file, err := os.OpenFile(p.Filename, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
 	if err != nil {
 		return err
 	}
@@ -125,9 +132,9 @@ func RollbackFileToInitialState(filename string, initialStateValues []int) error
 	return nil
 }
 
-// DeleteNumbersFromCSV Function to delete numbers from a CSV file
-func DeleteNumbersFromCSV(filename string, numbersToDelete []int) error {
-	existingData, err := ReadNumbersFromCSV(filename)
+// Delete Function to delete numbers from a CSV file
+func (p PackFiles) Delete(numbersToDelete []int) error {
+	existingData, err := p.Read()
 	if err != nil {
 		return err
 	}
@@ -147,7 +154,7 @@ func DeleteNumbersFromCSV(filename string, numbersToDelete []int) error {
 	}
 
 	// Open the CSV file
-	file, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
+	file, err := os.OpenFile(p.Filename, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
 	if err != nil {
 		return err
 	}

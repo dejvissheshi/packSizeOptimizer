@@ -2,25 +2,23 @@ package main
 
 import (
 	"fmt"
-	"github.com/gorilla/mux"
 	"net/http"
 	"os"
+	"packSizeOptimizer/file"
+
+	"packSizeOptimizer/routers"
 )
 
 func main() {
 
-	// Endpoints
-	myRouter := mux.NewRouter().StrictSlash(true)
-	myRouter.HandleFunc("/calculate/{id}", CalculatePackages)
-	myRouter.HandleFunc("/rollback", RollbackPackageChanges)
-	myRouter.HandleFunc("/add/{id}", AddNewPackages)
-	myRouter.HandleFunc("/remove/{id}", RemovePackages)
-	myRouter.HandleFunc("/read", ReadPackages)
-	myRouter.HandleFunc("/form/calculate", CalculateData).Methods("POST")
+	packService := file.PackFiles{
+		Filename: "data.csv",
+	}
 
-	myRouter.HandleFunc("/", Index)
-	myRouter.HandleFunc("/visual/calculate/", CalculateTemplate)
-	myRouter.HandleFunc("/submit", SubmitHandler)
+	httpHandler := routers.HttpHandler{
+		PackService: packService,
+	}
+	myRouter := routers.NewRouter(httpHandler)
 
 	port := os.Getenv("PORT")
 	if port == "" {
