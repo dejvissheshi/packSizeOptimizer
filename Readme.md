@@ -7,7 +7,6 @@ the calculation of the packages and customization of delivery packages.
 
 How to run the application locally:
 
-
 Run the docker comands to build and run the application locally.
 1. docker build -t packsizeoptimizer .
 2. docker run -p 8080:8080 packsizeoptimizer
@@ -20,6 +19,9 @@ In order to run the application using docker-compose, run the following command:
  the database is exposed on port 3306, so make sure that the port is not used by any other application. Also the application
  image is mounted to the volume of the container, so any changes made to the application will be reflected in the container.
    (For simplicity purpose, the deployed application is using a file storage instead of a database.)
+
+The repository is organised following simple screaming architecture approach, 
+which makes it straightforward and easy to read. 
 
 API Documentation:
 
